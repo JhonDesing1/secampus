@@ -13,14 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Campus Solución Empresarial",
+  title: {
+    default: "Campus Solución Empresarial",
+    template: "%s | Campus Solución Empresarial",
+  },
   description:
-    "Diplomados y cursos en gestión administrativa y estructura empresarial para unidades productivas. Formación práctica con certificación.",
+    "Diplomados 100% virtuales y modulares en gestión administrativa, seguridad social, finanzas y estructura empresarial para unidades productivas. Formación práctica con certificación.",
   metadataBase: new URL("https://secampus.com"),
   openGraph: {
     title: "Campus Solución Empresarial",
     description:
-      "Formación empresarial práctica con certificación oficial. Diplomados online para unidades productivas.",
+      "Formación empresarial práctica con certificación. Diplomados online modulares para emprendedores, pymes y personal administrativo.",
     url: "https://secampus.com",
     siteName: "Campus Solución Empresarial",
     locale: "es_CO",

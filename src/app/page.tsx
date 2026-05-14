@@ -1,14 +1,27 @@
-const diplomados = [
-  {
-    titulo: "Gestión Administrativa y Estructura Empresarial",
-    subtitulo: "Para Unidades Productivas",
-    horas: 160,
-    modulos: 8,
-    estado: "Próximamente",
-  },
-];
+import Link from "next/link";
+import { listDiplomados, slugify, type MoodleCourse } from "@/lib/moodle";
 
-export default function Home() {
+function extraerHoras(summary: string): number | null {
+  const m = summary.match(/(\d{2,4})\s*horas/i);
+  return m ? Number(m[1]) : null;
+}
+
+function extraerModulos(summary: string): number | null {
+  const m = summary.match(/(\d+)\s*m[óo]dulos/i);
+  return m ? Number(m[1]) : null;
+}
+
+export const revalidate = 300;
+
+export default async function Home() {
+  let diplomados: MoodleCourse[] = [];
+  let error: string | null = null;
+  try {
+    diplomados = await listDiplomados();
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Error desconocido";
+  }
+
   return (
     <>
       <header className="border-b border-slate-200">
@@ -75,37 +88,58 @@ export default function Home() {
             Programas estructurados con certificación al completar el 100% del plan de estudios.
           </p>
 
+          {error && (
+            <div className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              No pudimos cargar el catálogo en este momento. Intenta de nuevo en unos minutos.
+            </div>
+          )}
+
+          {!error && diplomados.length === 0 && (
+            <div className="mt-8 rounded-lg border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+              Estamos preparando nuestros primeros diplomados. Vuelve pronto.
+            </div>
+          )}
+
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {diplomados.map((d) => (
-              <article
-                key={d.titulo}
-                className="rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="text-xs font-medium text-amber-700 bg-amber-50 inline-block rounded px-2 py-1">
-                  {d.estado}
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                  Diplomado en {d.titulo}
-                </h3>
-                <p className="mt-1 text-sm text-slate-600">{d.subtitulo}</p>
-                <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <dt className="text-slate-500">Duración</dt>
-                    <dd className="font-medium text-slate-900">{d.horas} horas</dd>
-                  </div>
-                  <div>
-                    <dt className="text-slate-500">Módulos</dt>
-                    <dd className="font-medium text-slate-900">{d.modulos}</dd>
-                  </div>
-                </dl>
-                <button
-                  disabled
-                  className="mt-6 w-full rounded-md bg-slate-100 px-4 py-2 text-slate-500 text-sm font-medium cursor-not-allowed"
+            {diplomados.map((d) => {
+              const horas = extraerHoras(d.summary);
+              const modulos = extraerModulos(d.summary);
+              const slug = slugify(d.shortname);
+              const nombreCorto = d.fullname.replace(/^Diplomado en\s+/i, "");
+              return (
+                <article
+                  key={d.id}
+                  className="rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow flex flex-col"
                 >
-                  Inscripciones próximamente
-                </button>
-              </article>
-            ))}
+                  <div className="text-xs font-medium text-amber-700 bg-amber-50 inline-block rounded px-2 py-1 self-start">
+                    Próximamente
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                    Diplomado en {nombreCorto}
+                  </h3>
+                  <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                    {horas !== null && (
+                      <div>
+                        <dt className="text-slate-500">Duración</dt>
+                        <dd className="font-medium text-slate-900">{horas} horas</dd>
+                      </div>
+                    )}
+                    {modulos !== null && (
+                      <div>
+                        <dt className="text-slate-500">Módulos</dt>
+                        <dd className="font-medium text-slate-900">{modulos}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <Link
+                    href={`/diplomados/${slug}`}
+                    className="mt-6 w-full rounded-md bg-blue-700 px-4 py-2 text-white text-sm font-medium hover:bg-blue-800 text-center"
+                  >
+                    Ver detalle
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         </section>
 

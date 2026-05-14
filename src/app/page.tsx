@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { listDiplomados, slugify, type MoodleCourse } from "@/lib/moodle";
-import {
-  getDiplomadoContenido,
-  listDiplomadosContenido,
-} from "@/lib/diplomados-content";
+import { listDiplomadosContenido } from "@/lib/diplomados-content";
 
 type DiplomadoTarjeta = {
   shortname: string;
@@ -16,52 +13,19 @@ type DiplomadoTarjeta = {
   enMoodle: boolean;
 };
 
-function extraerHoras(summary: string): number | null {
-  const m = summary.match(/(\d{2,4})\s*horas/i);
-  return m ? Number(m[1]) : null;
-}
-
-function extraerModulos(summary: string): number | null {
-  const m = summary.match(/(\d+)\s*m[óo]dulos/i);
-  return m ? Number(m[1]) : null;
-}
-
 function construirCatalogo(moodleCursos: MoodleCourse[]): DiplomadoTarjeta[] {
-  const porShortname = new Map<string, DiplomadoTarjeta>();
+  const enMoodle = new Set(moodleCursos.map((c) => c.shortname.toUpperCase()));
 
-  for (const c of moodleCursos) {
-    const stat = getDiplomadoContenido(c.shortname);
-    porShortname.set(c.shortname.toUpperCase(), {
-      shortname: c.shortname,
-      titulo: stat?.tituloCorto ?? c.fullname.replace(/^Diplomado en\s+/i, ""),
-      resumen:
-        stat?.resumenCorto ??
-        c.summary.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180),
-      horas: stat?.duracionHoras ?? extraerHoras(c.summary),
-      modulos: stat?.modulos.length ?? extraerModulos(c.summary),
-      modalidad: stat?.modalidad ?? null,
-      matricula: stat?.inversion?.matricula ?? null,
-      enMoodle: true,
-    });
-  }
-
-  for (const s of listDiplomadosContenido()) {
-    const key = s.shortname.toUpperCase();
-    if (!porShortname.has(key)) {
-      porShortname.set(key, {
-        shortname: s.shortname,
-        titulo: s.tituloCorto,
-        resumen: s.resumenCorto,
-        horas: s.duracionHoras,
-        modulos: s.modulos.length,
-        modalidad: s.modalidad,
-        matricula: s.inversion?.matricula ?? null,
-        enMoodle: false,
-      });
-    }
-  }
-
-  return Array.from(porShortname.values());
+  return listDiplomadosContenido().map((s) => ({
+    shortname: s.shortname,
+    titulo: s.tituloCorto,
+    resumen: s.resumenCorto,
+    horas: s.duracionHoras,
+    modulos: s.modulos.length,
+    modalidad: s.modalidad,
+    matricula: s.inversion?.matricula ?? null,
+    enMoodle: enMoodle.has(s.shortname.toUpperCase()),
+  }));
 }
 
 export const revalidate = 300;

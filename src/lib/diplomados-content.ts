@@ -36,7 +36,7 @@ export type DiplomadoContenido = {
 export const diplomadosContenido: Record<string, DiplomadoContenido> = {
   "GAEE-UP": {
     shortname: "GAEE-UP",
-    tituloCorto: "Gestión Administrativa y Estructura Empresarial",
+    tituloCorto: "Gestión Administrativa y Estructura Empresarial para Unidades Productivas",
     tituloLargo:
       "Diplomado en Gestión Administrativa y Estructura Empresarial para Unidades Productivas",
     resumenCorto:
